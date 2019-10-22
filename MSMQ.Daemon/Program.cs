@@ -19,6 +19,8 @@ namespace MSMQ.Daemon
         static void Main(string[] args)
         {
             QueueProcessor queueProcessor = new QueueProcessor();
+            // Uncomment the following line to load some sample messages into the local MSMQ queue
+            //queueProcessor.CreateSampleData();
 
             Console.WriteLine("**** MSMQ Daemon is Starting ***");
             Task.Run(() => queueProcessor.ProcessMessages());

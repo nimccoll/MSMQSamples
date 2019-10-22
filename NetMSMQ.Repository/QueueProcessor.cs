@@ -41,7 +41,9 @@ namespace NetMSMQ.Repository
         {
             if (MessageQueue.Exists(_queueName))
             {
+                // Use the ActiveXMessageFormatter for string data - use the XmlMessageFormatter for objects
                 MessageQueue messageQueue = new MessageQueue(_queueName);
+                messageQueue.Formatter = new ActiveXMessageFormatter();
                 _isStopped = false;
                 _isRunning = true;
                 do
@@ -54,8 +56,7 @@ namespace NetMSMQ.Repository
                         System.Messaging.Message message = await Task.Run(() => messageQueue.Receive(new TimeSpan(0, 0, 10)));
                         try
                         {
-                            Trace.TraceInformation("QueueProcessor: Message found. Attempting to write message to the service bus...");
-                            // Convert the message body to byte array of string - assumes message is simply JSON
+                            // Convert the message body to a byte array - assumes message is simply JSON
                             Microsoft.Azure.ServiceBus.Message serviceBusmessage = new Microsoft.Azure.ServiceBus.Message(Encoding.UTF8.GetBytes(message.Body.ToString()));
                             await _topicClient.SendAsync(serviceBusmessage);
                             Trace.TraceInformation("QueueProcessor: Message successfully written to the service bus.");
@@ -94,6 +95,21 @@ namespace NetMSMQ.Repository
                 Task.Delay(1000).Wait();
             } while (_isRunning);
             Trace.TraceInformation("QueueProcessor: Completed processing messages.");
+        }
+
+        public void CreateSampleData()
+        {
+            // Put some sample messages in the MSMQ queue for testing
+            // Use the ActiveXMessageFormatter for string data - use the XmlMessageFormatter for objects
+            MessageQueue messageQueue = new MessageQueue(_queueName);
+            System.Messaging.Message message = new System.Messaging.Message("{ \"id\": \"12345\" }", new ActiveXMessageFormatter());
+            messageQueue.Send(message);
+            message = new System.Messaging.Message("{ \"id\": \"54321\" }", new ActiveXMessageFormatter());
+            messageQueue.Send(message);
+            message = new System.Messaging.Message("{ \"id\": \"67890\" }", new ActiveXMessageFormatter());
+            messageQueue.Send(message);
+            message = new System.Messaging.Message("{ \"id\": \"09876\" }", new ActiveXMessageFormatter());
+            messageQueue.Send(message);
         }
     }
 }
